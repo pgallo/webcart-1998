@@ -1,0 +1,11 @@
+build/
+build-*/
+cmake-build-*/
+Testing/
+compile_commands.json
+.cache/
+servlet/target/
+*.journal
+*.class
+.vs/
+*.user

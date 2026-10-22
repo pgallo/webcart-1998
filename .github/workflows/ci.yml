@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtest-dev cmake g++
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Test core (GoogleTest)
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Demo
+        run: ./build/webcart-demo data
+
+      - name: Pure-Java checks (javac only) and gateway contract
+        run: scripts/check-java.sh build/webcart-gateway
+
+      - name: Servlet module (JUnit, embedded servlet container, real C++ gateway)
+        run: mvn -B -f servlet/pom.xml test -Dwebcart.gateway.bin="$GITHUB_WORKSPACE/build/webcart-gateway"
+
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure (MSVC, MIDL)
+        run: cmake -S . -B build -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DWEBCART_BUILD_TESTS=OFF
+
+      - name: Build core, gateway, COM server and COM client test
+        run: cmake --build build
+
+      - name: Portable core demo on Windows
+        run: build\webcart-demo.exe data
+
+      - name: ASP page logic under cscript (no IIS)
+        run: cscript //nologo tests\asp_logic.vbs
+
+      - name: Register COM local server (per user, machine-wide fallback)
+        shell: pwsh
+        run: |
+          $exe = "$env:GITHUB_WORKSPACE\build\com\webcart-server.exe"
+          $journal = "$env:RUNNER_TEMP\webcart.journal"
+          & $exe /RegServerPerUser -journal $journal -idle 60
+          if ($LASTEXITCODE -ne 0) { throw "per-user registration failed" }
+          try {
+            $catalog = New-Object -ComObject WebCart.Catalog
+            Write-Host "per-user (HKCU) registration activates: $($catalog.Count) products"
+            [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($catalog)
+          } catch {
+            # COM ignores HKCU class registrations for elevated callers, and
+            # hosted runners run elevated. Fall back to HKLM.
+            Write-Host "per-user activation failed: $($_.Exception.Message)"
+            & $exe /UnregServerPerUser
+            & $exe /RegServer -journal $journal -idle 60
+            if ($LASTEXITCODE -ne 0) { throw "machine-wide registration failed" }
+            Write-Host "registered machine-wide (HKLM)"
+          }
+          exit 0
+
+      - name: VBScript COM smoke test (late binding, storefront and gateway logic)
+        run: cscript //nologo tests\com_smoke.vbs
+
+      - name: C++ COM client test (vtable binding)
+        run: build\com\com_client_test.exe

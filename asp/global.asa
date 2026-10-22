@@ -1,0 +1,15 @@
+<script language="VBScript" runat="Server">
+' ASP application events. The session keeps only the business-tier cart id;
+' the cart itself lives in the COM server, so a web farm node or an
+' application restart does not lose it while the server process is up.
+
+Sub Application_OnStart
+    Application("StoreName") = "Webcart demo store"
+End Sub
+
+Sub Session_OnStart
+    Session.Timeout = 30
+    Session("CartId") = ""
+    Session("Flash") = ""
+End Sub
+</script>

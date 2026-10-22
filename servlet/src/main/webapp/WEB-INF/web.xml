@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+  <display-name>Webcart servlet storefront</display-name>
+
+  <context-param>
+    <param-name>webcart.gatewayUrl</param-name>
+    <!-- webcart-gateway, or gateway.asp on the IIS host in the classic layout -->
+    <param-value>http://127.0.0.1:8099/webcart/gateway</param-value>
+  </context-param>
+
+  <listener>
+    <listener-class>lab.webcart.web.StorefrontListener</listener-class>
+  </listener>
+
+  <filter>
+    <filter-name>encoding</filter-name>
+    <filter-class>lab.webcart.web.EncodingFilter</filter-class>
+  </filter>
+  <filter>
+    <filter-name>sessionCart</filter-name>
+    <filter-class>lab.webcart.web.SessionCartFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>encoding</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>sessionCart</filter-name>
+    <url-pattern>/cart</url-pattern>
+    <url-pattern>/checkout</url-pattern>
+  </filter-mapping>
+
+  <servlet><servlet-name>catalog</servlet-name><servlet-class>lab.webcart.web.CatalogServlet</servlet-class></servlet>
+  <servlet><servlet-name>cart</servlet-name><servlet-class>lab.webcart.web.CartServlet</servlet-class></servlet>
+  <servlet><servlet-name>checkout</servlet-name><servlet-class>lab.webcart.web.CheckoutServlet</servlet-class></servlet>
+  <servlet><servlet-name>receipt</servlet-name><servlet-class>lab.webcart.web.ReceiptServlet</servlet-class></servlet>
+  <servlet-mapping><servlet-name>catalog</servlet-name><url-pattern>/catalog</url-pattern></servlet-mapping>
+  <servlet-mapping><servlet-name>cart</servlet-name><url-pattern>/cart</url-pattern></servlet-mapping>
+  <servlet-mapping><servlet-name>checkout</servlet-name><url-pattern>/checkout</url-pattern></servlet-mapping>
+  <servlet-mapping><servlet-name>receipt</servlet-name><url-pattern>/receipt</url-pattern></servlet-mapping>
+
+  <session-config>
+    <session-timeout>30</session-timeout>
+    <cookie-config><http-only>true</http-only></cookie-config>
+    <tracking-mode>COOKIE</tracking-mode>
+  </session-config>
+
+  <welcome-file-list><welcome-file>catalog</welcome-file></welcome-file-list>
+</web-app>

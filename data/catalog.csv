@@ -1,0 +1,10 @@
+# Synthetic catalog for the lab. Prices are net of VAT, in euro cents.
+sku,name,category,unit_price_cents,vat_bp,stock
+TEA-001,Smoked black tea 100 g,pantry,650,1000,40
+TEA-002,Mountain green tea 80 g,pantry,720,1000,25
+CUP-010,Stoneware mug 350 ml,kitchen,1290,2200,12
+CUP-011,Double-wall glass 250 ml,kitchen,1550,2200,6
+POT-020,Cast iron teapot 0.8 l,kitchen,4900,2200,3
+BOOK-100,Field guide to loose-leaf tea,books,1800,400,10
+BOOK-101,Brewing by numbers (paperback),books,2400,400,4
+KIT-500,Starter kit: pot two mugs and tea,kitchen,7990,2200,2

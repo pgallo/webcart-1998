@@ -1,0 +1,5 @@
+# Synthetic promotions. multibuy rows are automatic, the others need a code.
+code,kind,label,sku,category,buy,pay,percent_bp,amount_cents,min_subtotal_cents
+TEA3FOR2,multibuy,Smoked black tea: 3 for 2,TEA-001,,3,2,,,
+WELCOME10,percent,10% off orders over 30.00,,,,,1000,,3000
+BOOKS5,category_amount,5.00 off books,,books,,,,500,

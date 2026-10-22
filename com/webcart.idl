@@ -1,0 +1,106 @@
+// Business tier interfaces. All three are dual (vtable for C++ clients,
+// IDispatch for VBScript and ASP) and oleautomation, so the universal
+// marshaler can carry them across process and machine boundaries using the
+// type library alone: no proxy/stub DLL to build or register.
+//
+// Cart and Order objects are handles. State lives in the server process,
+// keyed by cart id, so an ASP page keeps only the id in Session and never
+// stores a COM object there.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+    object,
+    uuid(393FFD09-3DE0-43B4-8001-336B40C4886B),
+    dual,
+    oleautomation,
+    nonextensible,
+    helpstring("Product catalog with live availability")
+]
+interface ICatalog : IDispatch
+{
+    [propget, id(1)] HRESULT Count([out, retval] long* count);
+    [id(2)] HRESULT SkuAt([in] long index, [out, retval] BSTR* sku);
+    [id(3)] HRESULT ProductName([in] BSTR sku, [out, retval] BSTR* name);
+    [id(4)] HRESULT Category([in] BSTR sku, [out, retval] BSTR* category);
+    [id(5)] HRESULT UnitPriceCents([in] BSTR sku, [out, retval] long* cents);
+    [id(6)] HRESULT VatRateBp([in] BSTR sku, [out, retval] long* basisPoints);
+    [id(7)] HRESULT Available([in] BSTR sku, [out, retval] long* units);
+    [id(8)] HRESULT ToXml([out, retval] BSTR* xml);
+};
+
+[
+    object,
+    uuid(A9312D01-D4E5-4DC5-B765-C9CB8F247960),
+    dual,
+    oleautomation,
+    nonextensible,
+    helpstring("Handle to a server-side shopping cart")
+]
+interface ICart : IDispatch
+{
+    [id(1)] HRESULT Create([out, retval] BSTR* cartId);
+    [id(2)] HRESULT Open([in] BSTR cartId, [out, retval] VARIANT_BOOL* found);
+    [propget, id(3)] HRESULT CartId([out, retval] BSTR* cartId);
+    [id(4)] HRESULT AddItem([in] BSTR sku, [in] long quantity);
+    [id(5)] HRESULT SetQuantity([in] BSTR sku, [in] long quantity);
+    [id(6)] HRESULT RemoveItem([in] BSTR sku);
+    [id(7)] HRESULT ApplyPromotion([in] BSTR code);
+    [propget, id(8)] HRESULT LineCount([out, retval] long* count);
+    [id(9)] HRESULT LineSku([in] long index, [out, retval] BSTR* sku);
+    [id(10)] HRESULT LineName([in] long index, [out, retval] BSTR* name);
+    [id(11)] HRESULT LineQuantity([in] long index, [out, retval] long* quantity);
+    [id(12)] HRESULT LineNetCents([in] long index, [out, retval] long* cents);
+    [id(13)] HRESULT LineDiscountCents([in] long index, [out, retval] long* cents);
+    [propget, id(14)] HRESULT SubtotalCents([out, retval] long* cents);
+    [propget, id(15)] HRESULT DiscountCents([out, retval] long* cents);
+    [propget, id(16)] HRESULT VatCents([out, retval] long* cents);
+    [propget, id(17)] HRESULT TotalCents([out, retval] long* cents);
+    [propget, id(18)] HRESULT PromotionCode([out, retval] BSTR* code);
+    [propget, id(19)] HRESULT Notes([out, retval] BSTR* notes);
+    [id(20)] HRESULT ToXml([out, retval] BSTR* xml);
+};
+
+[
+    object,
+    uuid(1899A69E-DA2C-4DAF-B283-EDD051C905CF),
+    dual,
+    oleautomation,
+    nonextensible,
+    helpstring("Order placement and lookup")
+]
+interface IOrder : IDispatch
+{
+    [id(1)] HRESULT Place([in] BSTR cartId, [in] BSTR email, [out, retval] BSTR* orderId);
+    [id(2)] HRESULT Load([in] BSTR orderId, [out, retval] VARIANT_BOOL* found);
+    [propget, id(3)] HRESULT OrderId([out, retval] BSTR* orderId);
+    [propget, id(4)] HRESULT Email([out, retval] BSTR* email);
+    [propget, id(5)] HRESULT SubtotalCents([out, retval] long* cents);
+    [propget, id(6)] HRESULT DiscountCents([out, retval] long* cents);
+    [propget, id(7)] HRESULT VatCents([out, retval] long* cents);
+    [propget, id(8)] HRESULT TotalCents([out, retval] long* cents);
+    [propget, id(9)] HRESULT LineCount([out, retval] long* count);
+    [id(10)] HRESULT LineSku([in] long index, [out, retval] BSTR* sku);
+    [id(11)] HRESULT LineQuantity([in] long index, [out, retval] long* quantity);
+    [id(12)] HRESULT ToXml([out, retval] BSTR* xml);
+};
+
+[
+    uuid(5A97702B-BDD5-46F5-B3FF-30A6ADF08CCF),
+    version(1.0),
+    helpstring("WebCart business tier 1.0")
+]
+library WebCartLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(B3F55A56-2B23-4F42-9049-7575FDF5CCE1), helpstring("WebCart Catalog")]
+    coclass Catalog { [default] interface ICatalog; };
+
+    [uuid(93018D71-07C3-40A2-879F-B1C0FF287B0D), helpstring("WebCart Cart")]
+    coclass Cart { [default] interface ICart; };
+
+    [uuid(7417D34C-438D-448C-8501-62C0D7F6C33C), helpstring("WebCart Order")]
+    coclass Order { [default] interface IOrder; };
+};
